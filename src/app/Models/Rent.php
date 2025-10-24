@@ -23,4 +23,8 @@ class Rent extends Model
     {
         return $this->belongsTo(User::class, 'renter_id');
     }
+
+    public function images(){
+        return $this->hasMany(RentImage::class,'rent_id');
+    }
 }
