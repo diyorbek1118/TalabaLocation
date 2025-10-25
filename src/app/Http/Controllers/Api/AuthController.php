@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\JsonResponse;
@@ -11,23 +14,17 @@ use Illuminate\Http\JsonResponse;
 class AuthController extends Controller
 {
 
-public function register(Request $request)
+public function register(RegisterRequest $request)
 {
-    $request->validate([
-    'name' => 'required|string|max:255',
-    'email' => 'required|email|unique:users,email',
-    'password' => 'required|string|min:8',
-    'phone' => ['required', 'regex:/^\+998\d{9}$/'], 
-    'role' => 'required|in:student,renter,admin',
-    ]);
+    $request->validated();
 
 
     $user = User::create([
         'name' => $request->name,
         'email' => $request->email,
-        'password' => $request->password,
+        'password' => Hash::make($request->password),
         'phone' => $request->phone,
-        'role'=> $request->role,
+        'role'=> 'renter',
     ]);
 
     return response()->json([
@@ -36,12 +33,9 @@ public function register(Request $request)
     ]);
 
 }
-public function login(Request $request): JsonResponse
+public function login(LoginRequest $request): JsonResponse
 {
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
+    $request->validated();
 
     $user = User::where('email', $request->email)->first();
 
@@ -50,6 +44,7 @@ public function login(Request $request): JsonResponse
     }
 
     return response()->json([
+        'user' => $user,
         'token' => $user->createToken($user->name)->plainTextToken,
     ]);
 }

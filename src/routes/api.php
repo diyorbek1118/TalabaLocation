@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Admin\StudentController;
 use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\RentController;
 use Illuminate\Support\Facades\Route;
 
 // auth 
@@ -15,5 +16,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('students', StudentController::class);
     Route::resource('renters', UserController::class);
     Route::resource('admins', UserController::class);
+    Route::resource('rents',RentController::class);
 });
 

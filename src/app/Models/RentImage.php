@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class RentImage extends Model
 {
-        protected $filliable=[
+        protected $fillable=[
         'rent_id',
         'image_path'
     ];
