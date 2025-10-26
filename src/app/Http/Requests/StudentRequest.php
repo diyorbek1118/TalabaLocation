@@ -38,6 +38,7 @@ class StudentRequest extends FormRequest
             'student_profile.group_name' => 'sometimes|string|max:50',
             'student_profile.course' => 'sometimes|string|max:50',
             'student_profile.tutor' => 'sometimes|string|max:255',
+            'student_profile.gender' => 'sometimes|in:male,female',
             'student_profile.rent_area' => 'sometimes|string|max:255',
             'student_profile.rent_address' => 'sometimes|string|max:500',
             'student_profile.rent_map_url' => 'sometimes|url',

@@ -11,12 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table) {
+        Schema::create('guest_commits', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sender_id')->nullable()->constrained('users')->onDelete('cascade')->onUpdate('cascade');
-            $table->string('type')->nullable();
-            $table->text('message');
+            $table->string('name');
+            $table->string('surname');
+            $table->string('phone');
+            $table->string('email');
+            $table->string('message');
             $table->enum('status', ['unread', 'read'])->default('unread');
+
+
             $table->timestamps();
         });
     }
@@ -26,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('guest_commits');
     }
 };
