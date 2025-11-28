@@ -16,7 +16,7 @@ class StudentController extends Controller
    public function index(): JsonResponse
 {
     $students = User::where('role', 'student')
-        ->with('studentProfile')
+        ->with( 'studentProfile')
         ->get();
 
     if ($students->isEmpty()) {

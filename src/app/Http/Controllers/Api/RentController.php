@@ -37,7 +37,6 @@ class RentController extends Controller
         }
     }
 
-    
     public function store(RentStorerequest $request): JsonResponse
     {
         try{
@@ -96,6 +95,7 @@ class RentController extends Controller
     public function update(RentUpdaterequest $request, string $id): JsonResponse
     {
         try{
+
             $validate =$request->validated();
 
         $rent = Rent::with('images')->where('id', $id)->first();

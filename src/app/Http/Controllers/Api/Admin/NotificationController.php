@@ -68,6 +68,7 @@ class NotificationController extends Controller
         }
     }
 
+
     public function getCommits(): JsonResponse
     {
         try {
@@ -152,7 +153,7 @@ public function getPendingRents(): JsonResponse{
     }
 }
 
-public function updateStatus($id){
+public function updateStatus($id,$status){
     try {
         
         $item = Rent::find($id);
@@ -164,12 +165,12 @@ public function updateStatus($id){
             ], 404);
         }
 
-        $item->status = 'rejected';
+        $item->status = $status;
         $item->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Status rejected deb belgilandi.',
+            'message' => 'Status '.$status.' deb belgilandi.',
             'data' => $item
         ], 200);
 

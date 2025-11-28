@@ -6,46 +6,25 @@ use App\Http\Controllers\Controller;
 use App\Models\Rent;
 use App\Models\User;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class StatisticsController extends Controller
 {
-  public function filterStudents(Request $request)
+    public function index(): JsonResponse
 {
     try {
-        $query = User::with('studentProfile')
-            ->where('role', 'student'); 
-
-        if ($request->filled('gender')) {
-            $query->whereHas('studentProfile', function ($q) use ($request) {
-                $q->where('gender', $request->gender);
-            });
-        }
-
-        if ($request->filled('course')) {
-            $query->whereHas('studentProfile', function ($q) use ($request) {
-                $q->where('course', $request->course);
-            });
-        }
-
-        if ($request->filled('name')) {
-            $query->where('name', 'like', "%{$request->name}%");
-        }
-
-        if ($request->filled('group')) {
-            $query->whereHas('studentProfile', function ($q) use ($request) {
-                $q->where('group', $request->group);
-            });
-        }
-
-        $students = $query->get();
+        $students = User::where('role', 'student')->count();
+        $renters = User::where('role', 'renter')->count();
+        $admins = User::where('role', 'admin')->count();
 
         return response()->json([
-            'success' => true,
-            'total' => $students->count(),
-            'data' => $students,
-        ]);
-    } catch (\Exception $e) {
+            'total_students' => $students,
+            'total_renters' => $renters,
+            'total_admins' => $admins,
+        ], 200);
+
+    } catch (Exception $e) {
         return response()->json([
             'success' => false,
             'message' => 'Server error',
@@ -54,7 +33,72 @@ class StatisticsController extends Controller
     }
 }
 
-    public function filterRents(Request $request)
+ public function filterStudents(Request $request): JsonResponse
+{
+    try {
+        $query = User::with('studentProfile')
+            ->where('role', 'student'); 
+        
+        if ($request->filled('gender')) {
+            $query->whereHas('studentProfile', function ($q) use ($request) {
+                $q->where('gender', $request->gender);
+            });
+        }
+        
+        if ($request->filled('course')) {
+            $query->whereHas('studentProfile', function ($q) use ($request) {
+                $q->where('course', $request->course);
+            });
+        }
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhereHas('studentProfile', function($q2) use ($search) {
+                      $q2->where('faculty', 'like', "%{$search}%")
+                         ->orWhere('tutor', 'like', "%{$search}%")
+                         ->orWhere('rent_address', 'like', "%{$search}%")
+                         ->orWhere('gender', 'like', "%{$search}%")
+                         ->orWhere('group_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+        
+        $students = $query->get()->map(function($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'faculty' => $user->studentProfile->faculty ?? '',
+                'course' => $user->studentProfile->course ?? '',
+                'group' => $user->studentProfile->group_name ?? '',
+                'tutor' => $user->studentProfile->tutor ?? '',
+                'rent_address' => $user->studentProfile->rent_address ?? '',
+                'rent_map_url' => $user->studentProfile->rent_map_url ?? '',
+                'gender' => $user->studentProfile->gender ?? '',
+            ];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'total' => $students->count(),
+            'data' => $students,
+        ]);
+        
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Server error',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
+    public function filterRents(Request $request): JsonResponse
     {
         try {
             $query = Rent::with('images');
@@ -85,7 +129,19 @@ class StatisticsController extends Controller
                 $query->orderBy($sortBy, $sortOrder);
             }
 
-            $rents = $query->get();
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('price', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%");
+                });
+            }
+
+
+            $rents = $query->latest()->get();
 
             return response()->json([
                 'success' => true,
@@ -102,7 +158,7 @@ class StatisticsController extends Controller
         }
     }
 
-    public function studentRentPriceChart()
+    public function studentRentPriceChart(): JsonResponse
     {
         try {
             $rents = Rent::select('price')->get();
