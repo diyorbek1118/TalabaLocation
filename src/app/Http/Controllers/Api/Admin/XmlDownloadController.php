@@ -1,70 +1,57 @@
 <?php
-
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Exports\Students;
+use App\Exports\Rents;
 use App\Http\Controllers\Controller;
-use App\Models\Rent;
-use App\Models\User;
-use SimpleXMLElement;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class XmlDownloadController extends Controller
 {
-    public function XmlDownload($model)
+    public function export(Request $request, $model)
     {
-        if ($model === 'rents') {
-
-            $data = Rent::all();
-
-            $xml = new SimpleXMLElement('<rents/>');
-
-            foreach ($data as $rent) {
-                $rentNode = $xml->addChild('rent');
-                $rentNode->addChild('id', $rent->id);
-                $rentNode->addChild('student_id', $rent->student_id);
-                $rentNode->addChild('price', $rent->price);
-                $rentNode->addChild('date', $rent->created_at);
+        try {
+            Log::info('Export request', [
+                'model' => $model,
+                'search' => $request->query('search')
+            ]);
+            
+            switch ($model) {
+                case 'students':
+                    $filters = [
+                        'search' => $request->query('search'),
+                        'sort_by' => $request->query('sort_by'),
+                        'sort_order' => $request->query('sort_order'),
+                    ];
+                    
+                    $filename = 'students_' . time() . '.xlsx';
+                    return Excel::download(new Students($filters), $filename);
+                
+                case 'rents':
+                    $filters = [
+                        'search' => $request->query('search'),
+                    ];
+                    
+                    Log::info('Rents export', ['filters' => $filters]);
+                    
+                    $filename = 'rents_' . time() . '.xlsx';
+                    return Excel::download(new Rents($filters), $filename);
+                
+                default:
+                    return response()->json(['message' => 'Model not found'], 404);
             }
-
-            $fileName = 'rents.xml';
-        }
-
-        else if ($model === 'students') {
-
-            $students = User::with('studentProfile')
-                ->where('role', 'student')
-                ->get();
-
-            $xml = new SimpleXMLElement('<students/>');
-
-            foreach ($students as $student) {
-                $studentNode = $xml->addChild('student');
-                $studentNode->addChild('id', $student->id);
-                $studentNode->addChild('name', $student->name);
-                $studentNode->addChild('phone', $student->phone);
-
-                if ($student->studentProfile) {
-                    $studentNode->addChild('faculty', $student->studentProfile->faculty);
-                    $studentNode->addChild('address', $student->studentProfile->rent_address);
-                    $studentNode->addChild('group', $student->studentProfile->group_name);
-                    $studentNode->addChild('tutor', $student->studentProfile->tutor);
-                    $studentNode->addChild('course', $student->studentProfile->course);
-                    $studentNode->addChild('gender', $student->studentProfile->gender);
-                }
-            }
-
-            $fileName = 'students.xml';
-        }
-
-        else {
+        } catch (\Exception $e) {
+            Log::error('Export failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
-                'error' => 'Model not found'
-            ], 404);
+                'message' => 'Export failed',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->streamDownload(function () use ($xml) {
-            echo $xml->asXML();
-        }, $fileName, [
-            'Content-Type' => 'application/xml',
-        ]);
     }
 }

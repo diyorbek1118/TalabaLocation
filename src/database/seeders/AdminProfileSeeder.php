@@ -14,7 +14,7 @@ class AdminProfileSeeder extends Seeder
     public function run(): void
     {
         AdminProfile::create([
-            'user_id' =>4,
+            'user_id' =>1,
             'position' => 'superAdmin',
             'province' => 'Navoiy viloyati',
             'district' => 'Xatirchi tumani'

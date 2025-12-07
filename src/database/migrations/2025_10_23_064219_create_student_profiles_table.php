@@ -14,8 +14,8 @@ return new class extends Migration {
             $table->string('group_name')->nullable();
             $table->string('course')->nullable();
             $table->string('tutor')->nullable();
-            $table->enum('gender', ['male', 'female'])->nullable();
-            $table->string('rent_area')->nullable();
+            $table->string('gender')->nullable();
+            $table->string('living_type');
             $table->text('rent_address')->nullable();
             $table->text('rent_map_url')->nullable();
             $table->timestamps();

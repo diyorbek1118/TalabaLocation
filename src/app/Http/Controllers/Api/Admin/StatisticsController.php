@@ -36,21 +36,27 @@ class StatisticsController extends Controller
  public function filterStudents(Request $request): JsonResponse
 {
     try {
-        $query = User::with('studentProfile')
-            ->where('role', 'student'); 
-        
+        $query = User::query()->where('role', 'student');
+
+        // Gender filter
         if ($request->filled('gender')) {
             $query->whereHas('studentProfile', function ($q) use ($request) {
                 $q->where('gender', $request->gender);
             });
         }
-        
-        if ($request->filled('course')) {
-            $query->whereHas('studentProfile', function ($q) use ($request) {
-                $q->where('course', $request->course);
-            });
+
+       if ($request->sort_by === 'course') {
+            $query->join('student_profiles', 'users.id', '=', 'student_profiles.user_id')
+                  ->orderBy('student_profiles.course', 'asc')
+                  ->select('users.*');
         }
-        
+         if ($request->sort_by === 'tutor') {
+            $query->join('student_profiles', 'users.id', '=', 'student_profiles.user_id')
+                  ->orderBy('student_profiles.tutor', 'asc')
+                  ->select('users.*');
+        }
+
+        // Search filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -62,11 +68,13 @@ class StatisticsController extends Controller
                          ->orWhere('tutor', 'like', "%{$search}%")
                          ->orWhere('rent_address', 'like', "%{$search}%")
                          ->orWhere('gender', 'like', "%{$search}%")
-                         ->orWhere('group_name', 'like', "%{$search}%");
+                         ->orWhere('group_name', 'like', "%{$search}%")
+                         ->orWhere('course', 'like', "%{$search}%")
+                         ->orWhere('living_type', 'like', "%{$search}%");
                   });
             });
         }
-        
+
         $students = $query->get()->map(function($user) {
             return [
                 'id' => $user->id,
@@ -77,18 +85,19 @@ class StatisticsController extends Controller
                 'course' => $user->studentProfile->course ?? '',
                 'group' => $user->studentProfile->group_name ?? '',
                 'tutor' => $user->studentProfile->tutor ?? '',
+                'living_type' => $user->studentProfile->living_type ?? '',
                 'rent_address' => $user->studentProfile->rent_address ?? '',
                 'rent_map_url' => $user->studentProfile->rent_map_url ?? '',
                 'gender' => $user->studentProfile->gender ?? '',
             ];
         });
-        
+
         return response()->json([
             'success' => true,
             'total' => $students->count(),
             'data' => $students,
         ]);
-        
+
     } catch (Exception $e) {
         return response()->json([
             'success' => false,
@@ -97,6 +106,7 @@ class StatisticsController extends Controller
         ], 500);
     }
 }
+
 
     public function filterRents(Request $request): JsonResponse
     {

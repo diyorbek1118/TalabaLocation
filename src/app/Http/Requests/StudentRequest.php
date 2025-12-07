@@ -32,16 +32,13 @@ class StudentRequest extends FormRequest
             'phone' => 'sometimes|string|max:20',
             'password' => 'sometimes|string|min:6|confirmed',
 
-            'student_profile.faculty' => 'sometimes|string|max:255',
-            'student_profile.department' => 'sometimes|string|max:255',
-            'student_profile.semester' => 'sometimes|integer|min:1',
-            'student_profile.group_name' => 'sometimes|string|max:50',
-            'student_profile.course' => 'sometimes|string|max:50',
-            'student_profile.tutor' => 'sometimes|string|max:255',
-            'student_profile.gender' => 'sometimes|in:male,female',
-            'student_profile.rent_area' => 'sometimes|string|max:255',
-            'student_profile.rent_address' => 'sometimes|string|max:500',
-            'student_profile.rent_map_url' => 'sometimes|url',
+            'faculty' => 'sometimes|string|max:255',
+            'living_type' => 'sometimes|string|max:255',
+            'group_name' => 'sometimes|string|max:50',
+            'course' => 'sometimes|string|max:50',
+            'tutor' => 'sometimes|string|max:255',
+            'gender' => 'sometimes|in:male,female',
+            'rent_address' => 'sometimes|string|max:500',
         ];
     }
 

@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAdminProfileRequest;
+use App\Http\Requests\UpdateAdminProfileRequest;
 use App\Models\AdminProfile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class AdminProfileController extends Controller
 {
@@ -31,7 +33,7 @@ class AdminProfileController extends Controller
     {
         $data = $store->validated();
 
-        $userId = Auth::id();
+        $userId = $store->user_id;
         $profile = AdminProfile::where('user_id', $userId)->first();
 
     if ($profile) {
@@ -62,23 +64,50 @@ class AdminProfileController extends Controller
 
     
     public function show($id)
+        {
+            $profile = User::with('adminProfile')->findOrFail(Auth::id());
+
+            return response()->json([
+                'admin' => $profile
+            ], 200);
+        }
+
+
+  public function update(UpdateAdminProfileRequest $request, AdminProfile $admin)
 {
-    $profile = User::with('adminProfile')->findOrFail(Auth::id());
+    $profile = $request->validated();
 
-    return response()->json([
-        'admin' => $profile
-    ], 200);
-}
+    if ($request->hasFile('profile_image')) {
+        if ($admin->profile_image && Storage::disk('public')->exists($admin->profile_image)) {
+            Storage::disk('public')->delete($admin->profile_image);
+        }
 
-
-    public function update(Request $request, string $id)
-    {
-        //
+        $path = $request->file('profile_image')->store('profile_images','public');
+        $admin->profile_image = $path;
     }
 
+    $admin->position = $profile['position'] ?? null;
+    $admin->province = $profile['province'] ?? null;
+    $admin->district = $profile['district'] ?? null;
+    $admin->save();
+
+    return response()->json([
+        'success'=> true
+    ], 200);
+}
    
     public function destroy(string $id)
     {
-        //
+        $deleteAdmin = User::find($id);
+        if(!$deleteAdmin){
+            return response()->json([
+                'message' => 'Admin not found'
+            ], 404);
+    }
+    $deleteAdmin->delete();
+    return response()->json([
+        'message' => 'Admin deleted successfully'
+    ], 200); 
+
     }
 }

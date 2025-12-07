@@ -19,11 +19,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::apiResource('students', StudentController::class);
     Route::apiResource('renters', UserController::class);
-    Route::apiResource('admins', UserController::class);
+    Route::apiResource('admin', UserController::class);
     Route::apiResource('rents',RentController::class);
     Route::apiResource('admins', AdminProfileController::class);
     Route::get('admins/profile', [AdminProfileController::class, 'show']);
-    Route::get('download-xml/{model}', [XmlDownloadController::class, 'XmlDownload']);
+    Route::get('download-xml/{model}', [XmlDownloadController::class, 'export']);
 });
 
 Route::prefix('statistika')

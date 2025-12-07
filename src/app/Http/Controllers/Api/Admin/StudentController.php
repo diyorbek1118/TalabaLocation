@@ -35,6 +35,7 @@ class StudentController extends Controller
     {
         $studentValidate = $request->validated();
 
+
         $userData = collect($studentValidate)->only(['name','surname','email','phone','password'])->toArray();
         if(isset($userData['password'])){
             $userData['password'] = Hash::make($userData['password']);
@@ -42,11 +43,12 @@ class StudentController extends Controller
 
         $student = User::create($userData);
 
-           $profileData = $request->validated('student_profile');
-
-          if($profileData){
-            $profileData['user_id'] = $student->id;
-            StudentProfile::create($profileData);
+           $profileData = $request->validated();
+           $profile = collect($profileData)->only(['faculty','group_name','course','tutor','gender','living_type','rent_address'])->toArray();
+          if($profile){
+            $profile['user_id'] = $student->id;
+            // dd(vars: $profile);
+            StudentProfile::create($profile);
         }
 
         return response()->json([

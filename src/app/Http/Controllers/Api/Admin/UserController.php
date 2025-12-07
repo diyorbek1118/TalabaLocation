@@ -12,7 +12,7 @@ class UserController extends Controller
 {
     private function getRole(Request $request)
     {
-        if ($request->routeIs('admins.*')) {
+        if ($request->routeIs('admin.*')) {
             return 'admin';
         } elseif ($request->routeIs('renters.*')) {
             return 'renter';

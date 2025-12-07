@@ -34,7 +34,7 @@ class User extends Authenticatable
     }
 
     public function adminProfile(){
-        return $this->hasOne(AdminProfile::class);
+        return $this->hasOne(AdminProfile::class,'user_id');
     }
 
     public function rents()
